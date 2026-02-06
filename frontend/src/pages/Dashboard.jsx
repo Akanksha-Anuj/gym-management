@@ -2,6 +2,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Members from '../components/Members'
 import Visitors from '../components/Visitors'
+import PTClients from '../components/PTClients'
+import config from '../config'
 
 export default function Dashboard({ activeTab }) {
   const navigate = useNavigate()
@@ -37,6 +39,10 @@ export default function Dashboard({ activeTab }) {
     // Set active menu based on current route
     if (location.pathname === '/members') {
       setActiveMenu('members')
+    } else if (location.pathname === '/visitors') {
+      setActiveMenu('visitors')
+    } else if (location.pathname === '/ptclients') {
+      setActiveMenu('ptclients')
     } else if (location.pathname === '/dashboard') {
       setActiveMenu('dashboard')
     }
@@ -60,7 +66,7 @@ export default function Dashboard({ activeTab }) {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(
-        `http://localhost:5056/api/members/statistics/monthly?year=${selectedYear}&month=${selectedMonth}`,
+        `${config.API_BASE_URL}/api/members/statistics/monthly?year=${selectedYear}&month=${selectedMonth}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -84,7 +90,7 @@ export default function Dashboard({ activeTab }) {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(
-        `http://localhost:5056/api/members/statistics/yearly?year=${graphYear}`,
+        `${config.API_BASE_URL}/api/members/statistics/yearly?year=${graphYear}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -111,6 +117,7 @@ export default function Dashboard({ activeTab }) {
     { id: 'dashboard', name: 'Dashboard', icon: '📊' },
     { id: 'members', name: 'Members', icon: '👥' },
     { id: 'visitors', name: 'Visitors', icon: '🚶' },
+    { id: 'ptclients', name: 'PT Clients', icon: '🏋️' },
     { id: 'trainers', name: 'Trainer List', icon: '💪' },
   ]
 
@@ -141,6 +148,10 @@ export default function Dashboard({ activeTab }) {
               onClick={() => {
                 if (item.id === 'members') {
                   navigate('/members')
+                } else if (item.id === 'visitors') {
+                  navigate('/visitors')
+                } else if (item.id === 'ptclients') {
+                  navigate('/ptclients')
                 } else if (item.id === 'dashboard') {
                   navigate('/dashboard')
                 } else {
@@ -504,6 +515,10 @@ export default function Dashboard({ activeTab }) {
 
           {activeMenu === 'visitors' && (
             <Visitors />
+          )}
+
+          {activeMenu === 'ptclients' && (
+            <PTClients />
           )}
 
           {activeMenu === 'trainers' && (

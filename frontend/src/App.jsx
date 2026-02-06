@@ -34,6 +34,10 @@ function App() {
           path="/visitors"
           element={isAuthenticated ? <Dashboard activeTab="visitors" /> : <Navigate to="/login" />}
         />
+        <Route
+          path="/ptclients"
+          element={isAuthenticated ? <Dashboard activeTab="ptclients" /> : <Navigate to="/login" />}
+        />
         <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
       </Routes>
     </Router>
