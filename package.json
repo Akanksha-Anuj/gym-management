@@ -1,0 +1,21 @@
+{
+  "name": "gym-management",
+  "version": "1.0.0",
+  "description": "This is a gym management software which will include adding and updating member details.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Akanksha-Anuj/Gym-Management.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Akanksha-Anuj/Gym-Management/issues"
+  },
+  "homepage": "https://github.com/Akanksha-Anuj/Gym-Management#readme"
+}
