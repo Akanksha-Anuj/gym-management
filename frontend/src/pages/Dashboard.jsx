@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import Members from '../components/Members'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -143,10 +144,7 @@ export default function Dashboard() {
           )}
 
           {activeMenu === 'members' && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-semibold mb-4">Members Management</h2>
-              <p className="text-gray-600">Members list will be displayed here.</p>
-            </div>
+            <Members />
           )}
 
           {activeMenu === 'visitors' && (
