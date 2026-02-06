@@ -160,6 +160,13 @@ export default function Members() {
   }
 
   const handleEdit = (member) => {
+    console.log('Edit clicked for member:', member)
+    
+    if (!member || !member.id) {
+      alert('Error: id is not defined')
+      return
+    }
+    
     setEditingMember(member)
     setFormData({
       name: member.name,
@@ -177,6 +184,21 @@ export default function Members() {
 
   const handleUpdateMember = async (e) => {
     e.preventDefault()
+    
+    console.log('Update member clicked')
+    console.log('editingMember:', editingMember)
+    console.log('editingMember.id:', editingMember?.id)
+    console.log('formData:', formData)
+    
+    if (!editingMember) {
+      alert('Error: No member selected for editing')
+      return
+    }
+    
+    if (!editingMember.id) {
+      alert('Error: id is not defined')
+      return
+    }
     
     try {
       const token = localStorage.getItem('token')
