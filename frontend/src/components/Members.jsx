@@ -180,7 +180,7 @@ export default function Members() {
     
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`${config.API_BASE_URL}/api/members/${id}`, {
+      const response = await fetch(`${config.API_BASE_URL}/api/members/${editingMember.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
