@@ -81,9 +81,9 @@ export default function Login({ setAuth }) {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-500">
+        {/* <div className="mt-6 text-center text-sm text-gray-500">
           Default credentials: admin / Admin@123
-        </div>
+        </div> */}
       </div>
     </div>
   )
