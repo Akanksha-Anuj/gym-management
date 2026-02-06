@@ -11,7 +11,7 @@ builder.Services.AddControllers();
 
 // Register Database Context
 builder.Services.AddDbContext<GymDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"];
