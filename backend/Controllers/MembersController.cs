@@ -180,12 +180,12 @@ namespace backend.Controllers
             for (int month = 1; month <= 12; month++)
             {
                 // Count active members for this specific month
-                // Active = joined by end of month AND subscription hasn't expired yet
+                // Active = joined by end of month AND subscription expires on or after 10th of month
                 var lastDayOfMonth = new DateTime(year, month, DateTime.DaysInMonth(year, month), 23, 59, 59);
-                var firstDayOfMonth = new DateTime(year, month, 1, 0, 0, 0);
+                var tenthDayOfMonth = new DateTime(year, month, 10, 0, 0, 0);
                 
                 var memberCount = members
-                    .Where(m => m.memberSince <= lastDayOfMonth && m.subscriptionExpiryDate >= firstDayOfMonth)
+                    .Where(m => m.memberSince <= lastDayOfMonth && m.subscriptionExpiryDate >= tenthDayOfMonth)
                     .Count();
 
                 monthlyData.Add(new

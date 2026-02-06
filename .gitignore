@@ -1,0 +1,56 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite/React build
+frontend/dist/
+frontend/.vite/
+
+# .NET build
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code
+.vscode/
+
+# JetBrains
+.idea/
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets
+**/appsettings.Development.json
+**/appsettings.*.json
+!**/appsettings.json
+
+# Env files
+.env
+.env.*
+
+# Coverage
+coverage/
+
+# Misc
+*.tmp
+*.temp

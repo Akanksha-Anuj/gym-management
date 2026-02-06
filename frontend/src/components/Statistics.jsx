@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import config from '../config'
 
 export default function Statistics() {
   const [stats, setStats] = useState(null)
@@ -34,7 +35,7 @@ export default function Statistics() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(
-        `http://localhost:5056/api/members/statistics/monthly?year=${selectedYear}&month=${selectedMonth}`,
+        `${config.API_BASE_URL}/api/members/statistics/monthly?year=${selectedYear}&month=${selectedMonth}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import config from '../config'
 
 export default function Members() {
   const [members, setMembers] = useState([])
@@ -29,7 +30,7 @@ export default function Members() {
   const fetchMembers = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5056/api/members', {
+      const response = await fetch(`${config.API_BASE_URL}/api/members`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -56,7 +57,7 @@ export default function Members() {
 
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5056/api/members/${id}`, {
+      const response = await fetch(`${config.API_BASE_URL}/api/members/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -82,7 +83,7 @@ export default function Members() {
       // Get the current member data
       const member = members.find(m => m.id === id)
       
-      const response = await fetch(`http://localhost:5056/api/members/${id}`, {
+      const response = await fetch(`${config.API_BASE_URL}/api/members/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -118,7 +119,7 @@ export default function Members() {
     
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5056/api/members', {
+      const response = await fetch(`${config.API_BASE_URL}/api/members`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -179,7 +180,7 @@ export default function Members() {
     
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5056/api/members/${editingMember.id}`, {
+      const response = await fetch(`${config.API_BASE_URL}/api/members/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

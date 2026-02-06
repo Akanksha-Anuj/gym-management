@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import config from '../config'
 
 export default function Login({ setAuth }) {
   const [username, setUsername] = useState('')
@@ -15,7 +16,7 @@ export default function Login({ setAuth }) {
     setLoading(true)
 
     try {
-      const response = await axios.post('http://localhost:5056/api/auth/login', {
+      const response = await axios.post(`${config.API_BASE_URL}/api/auth/login`, {
         username,
         password
       })

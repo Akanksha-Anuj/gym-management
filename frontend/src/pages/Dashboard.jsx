@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Members from '../components/Members'
+import Visitors from '../components/Visitors'
 
 export default function Dashboard({ activeTab }) {
   const navigate = useNavigate()
@@ -502,10 +503,7 @@ export default function Dashboard({ activeTab }) {
           )}
 
           {activeMenu === 'visitors' && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-semibold mb-4">Visitors</h2>
-              <p className="text-gray-600">Visitor tracking will be displayed here.</p>
-            </div>
+            <Visitors />
           )}
 
           {activeMenu === 'trainers' && (

@@ -11,6 +11,7 @@ namespace backend.Data
 
         public DbSet<members> Members { get; set; }
         public DbSet<Admin> Admins { get; set; }
+        public DbSet<Visitor> Visitors { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -30,6 +31,14 @@ namespace backend.Data
                 entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.PasswordHash).IsRequired();
                 entity.HasIndex(e => e.Username).IsUnique();
+            });
+
+            modelBuilder.Entity<Visitor>(entity =>
+            {
+                entity.HasKey(e => e.id);
+                entity.Property(e => e.name).IsRequired();
+                entity.Property(e => e.contactNumber).IsRequired();
+                entity.Property(e => e.address).IsRequired();
             });
         }
     }
