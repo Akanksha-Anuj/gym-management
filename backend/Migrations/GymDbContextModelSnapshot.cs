@@ -43,6 +43,86 @@ namespace backend.Migrations
                     b.ToTable("Admins");
                 });
 
+            modelBuilder.Entity("backend.models.PTClient", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("address")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("contactNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("due")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("paid")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("payment")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("ptEndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ptStartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("remarks")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("trainer")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("id");
+
+                    b.ToTable("PTClients");
+                });
+
+            modelBuilder.Entity("backend.models.Visitor", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("address")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("contactNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("contacted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("joined")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("remark")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("visitedDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("id");
+
+                    b.ToTable("Visitors");
+                });
+
             modelBuilder.Entity("backend.models.members", b =>
                 {
                     b.Property<int>("id")
@@ -53,8 +133,18 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("bagProvided")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("contactNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("due")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("memberSince")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("name")
                         .IsRequired()
@@ -66,8 +156,14 @@ namespace backend.Migrations
                     b.Property<int>("payment")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("subscriptionExpiryDate")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("subscriptionPlan")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("subscriptionStartDate")
                         .HasColumnType("TEXT");
 
                     b.HasKey("id");
