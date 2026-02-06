@@ -3,5 +3,11 @@
   "buildCommand": "node ./node_modules/vite/bin/vite.js build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "devCommand": "vite --port $PORT"
+  "devCommand": "vite --port $PORT",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
