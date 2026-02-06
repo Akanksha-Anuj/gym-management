@@ -6,6 +6,9 @@ export default function Members() {
   const [error, setError] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingMember, setEditingMember] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortField, setSortField] = useState(null)
+  const [sortDirection, setSortDirection] = useState('asc')
   const [formData, setFormData] = useState({
     name: '',
     contactNumber: '',
@@ -14,6 +17,7 @@ export default function Members() {
     payment: 0,
     paid: 0,
     due: 0,
+    subscriptionStartDate: '',
     subscriptionExpiryDate: '',
     bagProvided: false
   })
@@ -141,6 +145,7 @@ export default function Members() {
         payment: 0,
         paid: 0,
         due: 0,
+        subscriptionStartDate: '',
         subscriptionExpiryDate: '',
         bagProvided: false
       })
@@ -163,6 +168,7 @@ export default function Members() {
       payment: member.payment,
       paid: member.paid,
       due: member.due,
+      subscriptionStartDate: member.subscriptionStartDate.split('T')[0],
       subscriptionExpiryDate: member.subscriptionExpiryDate.split('T')[0],
       bagProvided: member.bagProvided
     })
@@ -224,6 +230,7 @@ export default function Members() {
       payment: 0,
       paid: 0,
       due: 0,
+      subscriptionStartDate: '',
       subscriptionExpiryDate: '',
       bagProvided: false
     })
@@ -245,6 +252,38 @@ export default function Members() {
       year: 'numeric'
     })
   }
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+
+  const getFilteredAndSortedMembers = () => {
+    let filtered = members.filter(member =>
+      member.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    if (sortField) {
+      filtered.sort((a, b) => {
+        const aValue = new Date(a[sortField])
+        const bValue = new Date(b[sortField])
+        
+        if (sortDirection === 'asc') {
+          return aValue - bValue
+        } else {
+          return bValue - aValue
+        }
+      })
+    }
+
+    return filtered
+  }
+
+  const filteredMembers = getFilteredAndSortedMembers()
 
   if (loading) {
     return (
@@ -268,15 +307,27 @@ export default function Members() {
 
   return (
     <div className="bg-white rounded-lg shadow">
-      <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-        <h2 className="text-2xl font-semibold text-gray-800">Members Management</h2>
-        <button 
-          onClick={() => setShowAddForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
+      <div className="p-6 border-b border-gray-200">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-semibold text-gray-800">Members Management</h2>
+          <button 
+            onClick={() => setShowAddForm(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
           + Add Member
-        </button>
-      </div>
+        </button>        </div>
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full md:w-96 px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>      </div>
 
       {/* Add Member Modal */}
       {showAddForm && (
@@ -399,6 +450,20 @@ export default function Members() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                     min="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Subscription Start Date *
+                  </label>
+                  <input
+                    type="date"
+                    name="subscriptionStartDate"
+                    value={formData.subscriptionStartDate}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
                   />
                 </div>
 
@@ -576,6 +641,20 @@ export default function Members() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Subscription Start Date *
+                  </label>
+                  <input
+                    type="date"
+                    name="subscriptionStartDate"
+                    value={formData.subscriptionStartDate}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Subscription Expiry Date *
                   </label>
                   <input
@@ -622,9 +701,9 @@ export default function Members() {
         </div>
       )}
 
-      {members.length === 0 ? (
+      {filteredMembers.length === 0 ? (
         <div className="p-6 text-center text-gray-500">
-          No members found. Add your first member to get started.
+          {searchTerm ? 'No members found matching your search.' : 'No members found. Add your first member to get started.'}
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -639,13 +718,46 @@ export default function Members() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dues</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiry</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <button
+                    onClick={() => handleSort('subscriptionStartDate')}
+                    className="flex items-center space-x-1 hover:text-gray-700"
+                  >
+                    <span>Start Date</span>
+                    {sortField === 'subscriptionStartDate' && (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        {sortDirection === 'asc' ? (
+                          <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                        ) : (
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        )}
+                      </svg>
+                    )}
+                  </button>
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <button
+                    onClick={() => handleSort('subscriptionExpiryDate')}
+                    className="flex items-center space-x-1 hover:text-gray-700"
+                  >
+                    <span>Expiry</span>
+                    {sortField === 'subscriptionExpiryDate' && (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        {sortDirection === 'asc' ? (
+                          <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                        ) : (
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        )}
+                      </svg>
+                    )}
+                  </button>
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bag</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {members.map((member, index) => (
+              {filteredMembers.map((member, index) => (
                 <tr key={member.id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {index + 1}
@@ -677,6 +789,9 @@ export default function Members() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium">
                     ₹{member.due}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(member.subscriptionStartDate)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(member.subscriptionExpiryDate)}
