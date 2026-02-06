@@ -12,8 +12,8 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(GymDbContext))]
-    [Migration("20260206185201_InitialPostgreSQL")]
-    partial class InitialPostgreSQL
+    [Migration("20260206194912_InitialSupabase")]
+    partial class InitialSupabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,7 +34,7 @@ namespace backend.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -83,10 +83,10 @@ namespace backend.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("ptEndDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("ptStartDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("remarks")
                         .HasColumnType("text");
@@ -130,7 +130,7 @@ namespace backend.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("visitedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("id");
 
@@ -160,7 +160,7 @@ namespace backend.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("memberSince")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("name")
                         .IsRequired()
@@ -173,14 +173,14 @@ namespace backend.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("subscriptionExpiryDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("subscriptionPlan")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("subscriptionStartDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("id");
 

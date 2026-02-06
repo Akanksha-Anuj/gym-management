@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace backend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialPostgreSQL : Migration
+    public partial class InitialSupabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -20,7 +20,7 @@ namespace backend.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Username = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     PasswordHash = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -40,9 +40,9 @@ namespace backend.Migrations
                     payment = table.Column<int>(type: "integer", nullable: false),
                     paid = table.Column<int>(type: "integer", nullable: false),
                     due = table.Column<int>(type: "integer", nullable: false),
-                    memberSince = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    subscriptionStartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    subscriptionExpiryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    memberSince = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    subscriptionStartDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    subscriptionExpiryDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     bagProvided = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
@@ -62,8 +62,8 @@ namespace backend.Migrations
                     payment = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     paid = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     due = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    ptStartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ptEndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ptStartDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    ptEndDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     trainer = table.Column<string>(type: "text", nullable: false),
                     remarks = table.Column<string>(type: "text", nullable: true)
                 },
@@ -83,7 +83,7 @@ namespace backend.Migrations
                     address = table.Column<string>(type: "text", nullable: false),
                     contacted = table.Column<bool>(type: "boolean", nullable: false),
                     joined = table.Column<bool>(type: "boolean", nullable: false),
-                    visitedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    visitedDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     remark = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
