@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: gym_postgres
+    environment:
+      POSTGRES_DB: gym_management
+      POSTGRES_USER: gym_user
+      POSTGRES_PASSWORD: gym_password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - gym_network
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: gym_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gym.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - "8081:80"
+    networks:
+      - gym_network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gym_backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=gym_management;Username=gym_user;Password=gym_password123
+      - JWT_KEY=YourSecretKeyHere_MustBe32CharsOrMore_ChangeThis!
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - gym_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  gym_network:
+    driver: bridge
