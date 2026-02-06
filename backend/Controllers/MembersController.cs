@@ -43,6 +43,9 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<members>> CreateMember(members member)
         {
+            // Set memberSince to current subscription start date for new members
+            member.memberSince = member.subscriptionStartDate;
+            
             _context.Members.Add(member);
             await _context.SaveChangesAsync();
 
@@ -58,7 +61,17 @@ namespace backend.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(member).State = EntityState.Modified;
+            // Get the existing member to preserve memberSince
+            var existingMember = await _context.Members.FindAsync(id);
+            if (existingMember == null)
+            {
+                return NotFound();
+            }
+
+            // Preserve the original memberSince date
+            member.memberSince = existingMember.memberSince;
+
+            _context.Entry(existingMember).CurrentValues.SetValues(member);
 
             try
             {
@@ -95,6 +108,34 @@ namespace backend.Controllers
         private async Task<bool> MemberExists(int id)
         {
             return await _context.Members.AnyAsync(e => e.id == id);
+        }
+
+        // GET: api/members/statistics/monthly
+        [HttpGet("statistics/monthly")]
+        public async Task<ActionResult<object>> GetMonthlyStatistics([FromQuery] int year, [FromQuery] int month)
+        {
+            var members = await _context.Members.ToListAsync();
+
+            // Filter for new admissions (memberSince in the specified month)
+            var newAdmissions = members
+                .Where(m => m.memberSince.Year == year && m.memberSince.Month == month)
+                .Count();
+
+            // Filter for renewals (subscriptionStartDate in the month but memberSince earlier)
+            var renewals = members
+                .Where(m => m.subscriptionStartDate.Year == year 
+                         && m.subscriptionStartDate.Month == month
+                         && (m.memberSince.Year < year || (m.memberSince.Year == year && m.memberSince.Month < month)))
+                .Count();
+
+            return Ok(new
+            {
+                year,
+                month,
+                newAdmissions,
+                renewals,
+                total = newAdmissions + renewals
+            });
         }
     }
 }

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import Members from '../components/Members'
+import Statistics from '../components/Statistics'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -15,6 +16,7 @@ export default function Dashboard() {
   const menuItems = [
     { id: 'dashboard', name: 'Dashboard', icon: '📊' },
     { id: 'members', name: 'Members', icon: '👥' },
+    { id: 'statistics', name: 'Statistics', icon: '📈' },
     { id: 'visitors', name: 'Visitors', icon: '🚶' },
     { id: 'trainers', name: 'Trainer List', icon: '💪' },
   ]
@@ -145,6 +147,10 @@ export default function Dashboard() {
 
           {activeMenu === 'members' && (
             <Members />
+          )}
+
+          {activeMenu === 'statistics' && (
+            <Statistics />
           )}
 
           {activeMenu === 'visitors' && (
