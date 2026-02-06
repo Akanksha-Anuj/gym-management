@@ -253,6 +253,31 @@ export default function Members() {
     })
   }
 
+  const getSubscriptionStatus = (expiryDate) => {
+    const today = new Date()
+    const expiry = new Date(expiryDate)
+    const daysUntilExpiry = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24))
+    
+    if (daysUntilExpiry < 0) {
+      return { status: 'expired', label: 'Expired', color: 'red' }
+    } else if (daysUntilExpiry <= 7) {
+      return { status: 'expiring-soon', label: 'Expiring Soon', color: 'orange' }
+    } else {
+      return { status: 'active', label: 'Active', color: 'green' }
+    }
+  }
+
+  const getRowBackgroundClass = (expiryDate) => {
+    const status = getSubscriptionStatus(expiryDate)
+    if (status.status === 'expired') {
+      return 'bg-red-50 hover:bg-red-100'
+    } else if (status.status === 'expiring-soon') {
+      return 'bg-orange-50 hover:bg-orange-100'
+    } else {
+      return 'hover:bg-gray-50'
+    }
+  }
+
   const handleSort = (field) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
@@ -757,8 +782,10 @@ export default function Members() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredMembers.map((member, index) => (
-                <tr key={member.id} className="hover:bg-gray-50 transition">
+              {filteredMembers.map((member, index) => {
+                const subscriptionStatus = getSubscriptionStatus(member.subscriptionExpiryDate)
+                return (
+                <tr key={member.id} className={`transition ${getRowBackgroundClass(member.subscriptionExpiryDate)}`}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {index + 1}
                   </td>
@@ -793,8 +820,19 @@ export default function Members() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(member.subscriptionStartDate)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(member.subscriptionExpiryDate)}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-500">{formatDate(member.subscriptionExpiryDate)}</span>
+                      {subscriptionStatus.status !== 'active' && (
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          subscriptionStatus.status === 'expired' 
+                            ? 'bg-red-200 text-red-800' 
+                            : 'bg-orange-200 text-orange-800'
+                        }`}>
+                          {subscriptionStatus.label}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
@@ -827,7 +865,7 @@ export default function Members() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>

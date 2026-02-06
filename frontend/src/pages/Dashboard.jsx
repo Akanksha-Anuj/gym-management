@@ -1,16 +1,19 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Members from '../components/Members'
 
-export default function Dashboard() {
+export default function Dashboard({ activeTab }) {
   const navigate = useNavigate()
-  const [activeMenu, setActiveMenu] = useState('dashboard')
+  const location = useLocation()
+  const [activeMenu, setActiveMenu] = useState(activeTab || 'dashboard')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
+  const [graphYear, setGraphYear] = useState(new Date().getFullYear())
   const [stats, setStats] = useState(null)
   const [yearlyStats, setYearlyStats] = useState([])
   const [loading, setLoading] = useState(false)
+  const [hoveredPoint, setHoveredPoint] = useState(null)
 
   const months = [
     { value: 1, label: 'January' },
@@ -30,11 +33,26 @@ export default function Dashboard() {
   const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i)
 
   useEffect(() => {
+    // Set active menu based on current route
+    if (location.pathname === '/members') {
+      setActiveMenu('members')
+    } else if (location.pathname === '/dashboard') {
+      setActiveMenu('dashboard')
+    }
+  }, [location])
+
+  useEffect(() => {
     if (activeMenu === 'dashboard') {
       fetchStatistics()
       fetchYearlyStatistics()
     }
   }, [selectedYear, selectedMonth, activeMenu])
+
+  useEffect(() => {
+    if (activeMenu === 'dashboard') {
+      fetchYearlyStatistics()
+    }
+  }, [graphYear, activeMenu])
 
   const fetchStatistics = async () => {
     setLoading(true)
@@ -65,7 +83,7 @@ export default function Dashboard() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(
-        `http://localhost:5056/api/members/statistics/yearly?year=${selectedYear}`,
+        `http://localhost:5056/api/members/statistics/yearly?year=${graphYear}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -120,7 +138,13 @@ export default function Dashboard() {
             <button
               key={item.id}
               onClick={() => {
-                setActiveMenu(item.id)
+                if (item.id === 'members') {
+                  navigate('/members')
+                } else if (item.id === 'dashboard') {
+                  navigate('/dashboard')
+                } else {
+                  setActiveMenu(item.id)
+                }
                 setIsSidebarOpen(false)
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition ${
@@ -234,7 +258,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {/* Total Members - Clickable */}
                   <button
-                    onClick={() => setActiveMenu('members')}
+                    onClick={() => navigate('/members')}
                     className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border-l-4 border-blue-600 hover:shadow-lg transition-all text-left"
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -284,6 +308,188 @@ export default function Dashboard() {
                   </div>
                 </div>
               )}
+
+              {/* Member Growth Graph */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-semibold text-gray-800">Member Growth Trend</h3>
+                  <select
+                    value={graphYear}
+                    onChange={(e) => setGraphYear(Number(e.target.value))}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {years.map(year => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {yearlyStats.length > 0 && (
+                  <div className="relative" style={{ height: '350px' }}>
+                    <svg width="100%" height="100%" viewBox="0 0 900 350">
+                      {/* Grid lines */}
+                      {[0, 1, 2, 3, 4, 5].map(i => (
+                        <line
+                          key={`grid-${i}`}
+                          x1="60"
+                          y1={50 + i * 50}
+                          x2="870"
+                          y2={50 + i * 50}
+                          stroke="#e5e7eb"
+                          strokeWidth="1"
+                        />
+                      ))}
+                      
+                      {/* Y-axis labels */}
+                      {(() => {
+                        const maxMembers = Math.max(...yearlyStats.map(d => d.memberCount), 5)
+                        const step = Math.ceil(maxMembers / 5)
+                        return [0, 1, 2, 3, 4, 5].map(i => (
+                          <text
+                            key={`ylabel-${i}`}
+                            x="45"
+                            y={304 - i * 50}
+                            fill="#6b7280"
+                            fontSize="13"
+                            textAnchor="end"
+                            fontWeight="500"
+                          >
+                            {step * i}
+                          </text>
+                        ))
+                      })()}
+
+                      {/* X-axis line */}
+                      <line x1="60" y1="300" x2="870" y2="300" stroke="#9ca3af" strokeWidth="2" />
+                      {/* Y-axis line */}
+                      <line x1="60" y1="50" x2="60" y2="300" stroke="#9ca3af" strokeWidth="2" />
+                      
+                      {/* Line path */}
+                      <path
+                        d={(() => {
+                          const maxMembers = Math.max(...yearlyStats.map(d => d.memberCount), 5)
+                          const points = yearlyStats.map((data, index) => {
+                            const x = 60 + (index * (810 / 11))
+                            const y = 300 - ((data.memberCount / maxMembers) * 250)
+                            return `${index === 0 ? 'M' : 'L'} ${x} ${y}`
+                          }).join(' ')
+                          return points
+                        })()}
+                        fill="none"
+                        stroke="url(#lineGradient)"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+
+                      {/* Gradient definition */}
+                      <defs>
+                        <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#3b82f6" />
+                          <stop offset="100%" stopColor="#8b5cf6" />
+                        </linearGradient>
+                      </defs>
+                      
+                      {/* Data points with hover */}
+                      {(() => {
+                        const maxMembers = Math.max(...yearlyStats.map(d => d.memberCount), 5)
+                        return yearlyStats.map((data, index) => {
+                          const x = 60 + (index * (810 / 11))
+                          const y = 300 - ((data.memberCount / maxMembers) * 250)
+                          const isHovered = hoveredPoint === index
+                          return (
+                            <g key={`point-${index}`}>
+                              {/* Hover area */}
+                              <circle
+                                cx={x}
+                                cy={y}
+                                r="15"
+                                fill="transparent"
+                                style={{ cursor: 'pointer' }}
+                                onMouseEnter={() => setHoveredPoint(index)}
+                                onMouseLeave={() => setHoveredPoint(null)}
+                              />
+                              {/* Visible point */}
+                              <circle
+                                cx={x}
+                                cy={y}
+                                r={isHovered ? "7" : "5"}
+                                fill={isHovered ? "#8b5cf6" : "#3b82f6"}
+                                stroke="white"
+                                strokeWidth="2"
+                                style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                              />
+                              {/* Tooltip on hover */}
+                              {isHovered && (
+                                <>
+                                  <rect
+                                    x={x - 35}
+                                    y={y - 45}
+                                    width="70"
+                                    height="32"
+                                    fill="#1f2937"
+                                    rx="6"
+                                    opacity="0.95"
+                                  />
+                                  <text
+                                    x={x}
+                                    y={y - 30}
+                                    fill="white"
+                                    fontSize="12"
+                                    fontWeight="600"
+                                    textAnchor="middle"
+                                  >
+                                    {months[data.month - 1].label.substring(0, 3)}
+                                  </text>
+                                  <text
+                                    x={x}
+                                    y={y - 17}
+                                    fill="#60a5fa"
+                                    fontSize="14"
+                                    fontWeight="bold"
+                                    textAnchor="middle"
+                                  >
+                                    {data.memberCount}
+                                  </text>
+                                </>
+                              )}
+                              {/* X-axis labels */}
+                              <text
+                                x={x}
+                                y="320"
+                                fill="#6b7280"
+                                fontSize="12"
+                                textAnchor="middle"
+                                fontWeight="500"
+                              >
+                                {months[data.month - 1].label.substring(0, 3)}
+                              </text>
+                            </g>
+                          )
+                        })
+                      })()}
+
+                      {/* Chart title labels */}
+                      <text x="450" y="345" fill="#6b7280" fontSize="13" textAnchor="middle" fontWeight="600">
+                        Month
+                      </text>
+                      <text
+                        x="20"
+                        y="180"
+                        fill="#6b7280"
+                        fontSize="13"
+                        textAnchor="middle"
+                        fontWeight="600"
+                        transform="rotate(-90, 20, 180)"
+                      >
+                        Total Members
+                      </text>
+                    </svg>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

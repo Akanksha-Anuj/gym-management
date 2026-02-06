@@ -179,9 +179,13 @@ namespace backend.Controllers
 
             for (int month = 1; month <= 12; month++)
             {
-                // Count members whose subscription started in this specific month and year
+                // Count active members for this specific month
+                // Active = joined by end of month AND subscription hasn't expired yet
+                var lastDayOfMonth = new DateTime(year, month, DateTime.DaysInMonth(year, month), 23, 59, 59);
+                var firstDayOfMonth = new DateTime(year, month, 1, 0, 0, 0);
+                
                 var memberCount = members
-                    .Where(m => m.subscriptionStartDate.Year == year && m.subscriptionStartDate.Month == month)
+                    .Where(m => m.memberSince <= lastDayOfMonth && m.subscriptionExpiryDate >= firstDayOfMonth)
                     .Count();
 
                 monthlyData.Add(new
