@@ -22,7 +22,25 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<members>>> GetMembers()
         {
-            return await _context.Members.ToListAsync();
+            var membersList = await _context.Members.ToListAsync();
+            
+            // Fix any members with default memberSince date (from migration)
+            bool hasChanges = false;
+            foreach (var member in membersList)
+            {
+                if (member.memberSince.Year == 1)
+                {
+                    member.memberSince = member.subscriptionStartDate;
+                    hasChanges = true;
+                }
+            }
+            
+            if (hasChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+            
+            return membersList;
         }
 
         // GET: api/members/5
@@ -116,26 +134,64 @@ namespace backend.Controllers
         {
             var members = await _context.Members.ToListAsync();
 
-            // Filter for new admissions (memberSince in the specified month)
+            // Total members
+            var totalMembers = members.Count;
+
+            // Filter for new admissions (memberSince in the specified month AND subscriptionStartDate is the same)
             var newAdmissions = members
-                .Where(m => m.memberSince.Year == year && m.memberSince.Month == month)
+                .Where(m => m.memberSince.Year == year 
+                         && m.memberSince.Month == month 
+                         && m.subscriptionStartDate.Year == year 
+                         && m.subscriptionStartDate.Month == month)
                 .Count();
 
-            // Filter for renewals (subscriptionStartDate in the month but memberSince earlier)
+            // Filter for renewals ONLY (subscriptionStartDate in the month but memberSince is different/earlier)
             var renewals = members
                 .Where(m => m.subscriptionStartDate.Year == year 
                          && m.subscriptionStartDate.Month == month
-                         && (m.memberSince.Year < year || (m.memberSince.Year == year && m.memberSince.Month < month)))
+                         && !(m.memberSince.Year == year && m.memberSince.Month == month))
+                .Count();
+
+            // Memberships expiring this month
+            var expiringThisMonth = members
+                .Where(m => m.subscriptionExpiryDate.Year == year && m.subscriptionExpiryDate.Month == month)
                 .Count();
 
             return Ok(new
             {
                 year,
                 month,
+                totalMembers,
                 newAdmissions,
                 renewals,
+                expiringThisMonth,
                 total = newAdmissions + renewals
             });
+        }
+
+        // GET: api/members/statistics/yearly
+        [HttpGet("statistics/yearly")]
+        public async Task<ActionResult<object>> GetYearlyStatistics([FromQuery] int year)
+        {
+            var members = await _context.Members.ToListAsync();
+
+            var monthlyData = new List<object>();
+
+            for (int month = 1; month <= 12; month++)
+            {
+                // Count members whose subscription started in this specific month and year
+                var memberCount = members
+                    .Where(m => m.subscriptionStartDate.Year == year && m.subscriptionStartDate.Month == month)
+                    .Count();
+
+                monthlyData.Add(new
+                {
+                    month,
+                    memberCount
+                });
+            }
+
+            return Ok(monthlyData);
         }
     }
 }
