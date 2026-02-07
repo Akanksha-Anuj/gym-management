@@ -13,6 +13,7 @@ namespace backend.Data
         public DbSet<Admin> Admins { get; set; }
         public DbSet<Visitor> Visitors { get; set; }
         public DbSet<PTClient> PTClients { get; set; }
+        public DbSet<Expense> Expenses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -54,6 +55,15 @@ namespace backend.Data
                 entity.Property(e => e.ptStartDate).IsRequired();
                 entity.Property(e => e.ptEndDate).IsRequired();
                 entity.Property(e => e.trainer).IsRequired();
+            });
+
+            modelBuilder.Entity<Expense>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ExpenseDate).IsRequired();
+                entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
+                entity.Property(e => e.ExpenseType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Remarks).HasMaxLength(500);
             });
         }
     }
