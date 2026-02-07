@@ -193,6 +193,104 @@ export default function Dashboard({ activeTab }) {
     navigate('/login')
   }
 
+  const handleBackup = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        navigate('/login')
+        return
+      }
+
+      setLoading(true)
+      
+      // Fetch all data from different endpoints
+      const [membersRes, visitorsRes, ptClientsRes] = await Promise.all([
+        fetch(`${config.API_BASE_URL}/api/members`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${config.API_BASE_URL}/api/visitors`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${config.API_BASE_URL}/api/ptclients`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ])
+
+      if (!membersRes.ok || !visitorsRes.ok || !ptClientsRes.ok) {
+        throw new Error('Failed to fetch data for backup')
+      }
+
+      const [members, visitors, ptClients] = await Promise.all([
+        membersRes.json(),
+        visitorsRes.json(),
+        ptClientsRes.json()
+      ])
+
+      // Convert to CSV function
+      const convertToCSV = (data, filename) => {
+        if (!data || data.length === 0) {
+          return `${filename},No Data\n`
+        }
+
+        // Get headers from the first object
+        const headers = Object.keys(data[0])
+        const csvHeaders = headers.join(',')
+        
+        // Convert data rows
+        const csvRows = data.map(row => {
+          return headers.map(header => {
+            const value = row[header]
+            // Handle special characters and quotes in CSV
+            if (value === null || value === undefined) return ''
+            const stringValue = String(value)
+            // Escape quotes and wrap in quotes if contains comma, quote, or newline
+            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+              return `"${stringValue.replace(/"/g, '""')}"`
+            }
+            return stringValue
+          }).join(',')
+        })
+
+        return [csvHeaders, ...csvRows].join('\n')
+      }
+
+      // Create CSV files
+      const dateStr = new Date().toISOString().split('T')[0]
+      
+      const datasets = [
+        { data: members, name: 'Members', filename: `gym-members-${dateStr}.csv` },
+        { data: visitors, name: 'Visitors', filename: `gym-visitors-${dateStr}.csv` },
+        { data: ptClients, name: 'PT_Clients', filename: `gym-ptclients-${dateStr}.csv` }
+      ]
+
+      // Download each CSV file
+      datasets.forEach(({ data, name, filename }) => {
+        const csvContent = convertToCSV(data, name)
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a')
+        
+        if (link.download !== undefined) {
+          const url = URL.createObjectURL(blob)
+          link.setAttribute('href', url)
+          link.setAttribute('download', filename)
+          link.style.visibility = 'hidden'
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+        }
+      })
+
+      alert('Backup completed! 3 CSV files have been downloaded.')
+      
+    } catch (error) {
+      console.error('Backup failed:', error)
+      alert('Backup failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const menuItems = [
     { id: 'dashboard', name: 'Dashboard', icon: '📊' },
     { id: 'members', name: 'Members', icon: '👥' },
@@ -253,8 +351,19 @@ export default function Dashboard({ activeTab }) {
           ))}
         </nav>
 
-        {/* Logout Button */}
-        <div className="absolute bottom-4 left-4 right-4">
+        {/* Bottom Buttons */}
+        <div className="absolute bottom-4 left-4 right-4 space-y-2">
+          {/* Backup Button */}
+          <button
+            onClick={handleBackup}
+            disabled={loading}
+            className="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span>💾</span>
+            <span>{loading ? 'Backing up...' : 'Backup'}</span>
+          </button>
+          
+          {/* Logout Button */}
           <button
             onClick={handleLogout}
             className="w-full bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition flex items-center justify-center space-x-2"

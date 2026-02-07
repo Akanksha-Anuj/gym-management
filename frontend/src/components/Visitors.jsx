@@ -10,7 +10,7 @@ export default function Visitors() {
   const [formData, setFormData] = useState({
     name: '',
     contactNumber: '',
-    address: '',
+    address: 'Barh',
     contacted: false,
     joined: false,
     remark: ''
@@ -96,7 +96,7 @@ export default function Visitors() {
       setFormData({
         name: '',
         contactNumber: '',
-        address: '',
+        address: 'Barh',
         contacted: false,
         joined: false,
         remark: ''
@@ -154,7 +154,7 @@ export default function Visitors() {
     setFormData({
       name: '',
       contactNumber: '',
-      address: '',
+      address: 'Barh',
       contacted: false,
       joined: false,
       remark: ''
