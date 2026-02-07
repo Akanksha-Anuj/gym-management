@@ -10,7 +10,7 @@ export default function PTClients() {
   const [formData, setFormData] = useState({
     name: '',
     contactNumber: '',
-    address: '',
+    address: 'Barh',
     payment: '',
     paid: '',
     due: '',
@@ -165,7 +165,7 @@ export default function PTClients() {
     setFormData({
       name: '',
       contactNumber: '',
-      address: '',
+      address: 'Barh',
       payment: '',
       paid: '',
       due: '',

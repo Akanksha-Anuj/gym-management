@@ -13,7 +13,7 @@ export default function Members() {
   const [formData, setFormData] = useState({
     name: '',
     contactNumber: '',
-    address: '',
+    address: 'Barh',
     subscriptionPlan: '',
     payment: 0,
     paid: 0,
@@ -22,6 +22,7 @@ export default function Members() {
     subscriptionExpiryDate: '',
     bagProvided: false
   })
+  const [showOnlyWithDues, setShowOnlyWithDues] = useState(false)
 
   useEffect(() => {
     fetchMembers()
@@ -141,7 +142,7 @@ export default function Members() {
       setFormData({
         name: '',
         contactNumber: '',
-        address: '',
+        address: 'Barh',
         subscriptionPlan: '',
         payment: 0,
         paid: 0,
@@ -225,7 +226,7 @@ export default function Members() {
       setFormData({
         name: '',
         contactNumber: '',
-        address: '',
+        address: 'Barh',
         subscriptionPlan: '',
         payment: 0,
         paid: 0,
@@ -248,7 +249,7 @@ export default function Members() {
     setFormData({
       name: '',
       contactNumber: '',
-      address: '',
+      address: 'Barh',
       subscriptionPlan: '',
       payment: 0,
       paid: 0,
@@ -314,7 +315,9 @@ export default function Members() {
     let filtered = members.filter(member =>
       member.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
-
+    if (showOnlyWithDues) {
+      filtered = filtered.filter(member => Number(member.due) > 0)
+    }
     if (sortField) {
       filtered.sort((a, b) => {
         const aValue = new Date(a[sortField])
@@ -358,12 +361,24 @@ export default function Members() {
       <div className="p-6 border-b border-gray-200">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold text-gray-800">Members Management</h2>
-          <button 
-            onClick={() => setShowAddForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-          + Add Member
-        </button>        </div>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center text-sm font-medium text-gray-700">
+              <input
+                type="checkbox"
+                checked={showOnlyWithDues}
+                onChange={e => setShowOnlyWithDues(e.target.checked)}
+                className="mr-2 accent-blue-600"
+              />
+              Show Only With Dues
+            </label>
+            <button 
+              onClick={() => setShowAddForm(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              + Add Member
+            </button>
+          </div>
+        </div>
         <div className="relative">
           <input
             type="text"
@@ -769,35 +784,33 @@ export default function Members() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <button
                     onClick={() => handleSort('subscriptionStartDate')}
-                    className="flex items-center space-x-1 hover:text-gray-700"
+                    className={`flex items-center space-x-1 hover:text-gray-700 ${sortField === 'subscriptionStartDate' ? 'font-bold text-blue-700' : ''}`}
+                    title="Sort by Start Date"
                   >
                     <span>Start Date</span>
-                    {sortField === 'subscriptionStartDate' && (
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        {sortDirection === 'asc' ? (
-                          <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-                        ) : (
-                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                        )}
-                      </svg>
-                    )}
+                    <span>
+                      {sortField === 'subscriptionStartDate' ? (
+                        sortDirection === 'asc' ? '▲' : '▼'
+                      ) : (
+                        <span className="text-gray-300">⇅</span>
+                      )}
+                    </span>
                   </button>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <button
                     onClick={() => handleSort('subscriptionExpiryDate')}
-                    className="flex items-center space-x-1 hover:text-gray-700"
+                    className={`flex items-center space-x-1 hover:text-gray-700 ${sortField === 'subscriptionExpiryDate' ? 'font-bold text-blue-700' : ''}`}
+                    title="Sort by Expiry Date"
                   >
                     <span>Expiry</span>
-                    {sortField === 'subscriptionExpiryDate' && (
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        {sortDirection === 'asc' ? (
-                          <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-                        ) : (
-                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                        )}
-                      </svg>
-                    )}
+                    <span>
+                      {sortField === 'subscriptionExpiryDate' ? (
+                        sortDirection === 'asc' ? '▲' : '▼'
+                      ) : (
+                        <span className="text-gray-300">⇅</span>
+                      )}
+                    </span>
                   </button>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bag</th>

@@ -4,6 +4,8 @@ import Members from '../components/Members'
 import Visitors from '../components/Visitors'
 import PTClients from '../components/PTClients'
 import config from '../config'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import Revenue from '../components/Revenue'
 
 export default function Dashboard({ activeTab }) {
   const navigate = useNavigate()
@@ -26,6 +28,8 @@ export default function Dashboard({ activeTab }) {
     ptPaid: 0,
     ptDue: 0
   })
+  const [inquiryYear, setInquiryYear] = useState(new Date().getFullYear())
+  const [inquiryStats, setInquiryStats] = useState([])
 
   const months = [
     { value: 1, label: 'January' },
@@ -77,6 +81,12 @@ export default function Dashboard({ activeTab }) {
       fetchRevenueStats()
     }
   }, [revenueMonth, revenueYear, activeMenu])
+
+  useEffect(() => {
+    if (activeMenu === 'dashboard') {
+      fetchInquiryStats()
+    }
+  }, [inquiryYear, activeMenu])
 
   const fetchStatistics = async () => {
     setLoading(true)
@@ -188,9 +198,128 @@ export default function Dashboard({ activeTab }) {
     }
   }
 
+  const fetchInquiryStats = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(
+        `${config.API_BASE_URL}/api/visitors/statistics/yearly?year=${inquiryYear}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      if (response.ok) {
+        const data = await response.json()
+        setInquiryStats(data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch inquiry stats:', err)
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('token')
     navigate('/login')
+  }
+
+  const handleBackup = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        navigate('/login')
+        return
+      }
+
+      setLoading(true)
+      
+      // Fetch all data from different endpoints
+      const [membersRes, visitorsRes, ptClientsRes] = await Promise.all([
+        fetch(`${config.API_BASE_URL}/api/members`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${config.API_BASE_URL}/api/visitors`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${config.API_BASE_URL}/api/ptclients`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ])
+
+      if (!membersRes.ok || !visitorsRes.ok || !ptClientsRes.ok) {
+        throw new Error('Failed to fetch data for backup')
+      }
+
+      const [members, visitors, ptClients] = await Promise.all([
+        membersRes.json(),
+        visitorsRes.json(),
+        ptClientsRes.json()
+      ])
+
+      // Convert to CSV function
+      const convertToCSV = (data, filename) => {
+        if (!data || data.length === 0) {
+          return `${filename},No Data\n`
+        }
+
+        // Get headers from the first object
+        const headers = Object.keys(data[0])
+        const csvHeaders = headers.join(',')
+        
+        // Convert data rows
+        const csvRows = data.map(row => {
+          return headers.map(header => {
+            const value = row[header]
+            // Handle special characters and quotes in CSV
+            if (value === null || value === undefined) return ''
+            const stringValue = String(value)
+            // Escape quotes and wrap in quotes if contains comma, quote, or newline
+            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+              return `"${stringValue.replace(/"/g, '""')}"`
+            }
+            return stringValue
+          }).join(',')
+        })
+
+        return [csvHeaders, ...csvRows].join('\n')
+      }
+
+      // Create CSV files
+      const dateStr = new Date().toISOString().split('T')[0]
+      
+      const datasets = [
+        { data: members, name: 'Members', filename: `gym-members-${dateStr}.csv` },
+        { data: visitors, name: 'Visitors', filename: `gym-visitors-${dateStr}.csv` },
+        { data: ptClients, name: 'PT_Clients', filename: `gym-ptclients-${dateStr}.csv` }
+      ]
+
+      // Download each CSV file
+      datasets.forEach(({ data, name, filename }) => {
+        const csvContent = convertToCSV(data, name)
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a')
+        
+        if (link.download !== undefined) {
+          const url = URL.createObjectURL(blob)
+          link.setAttribute('href', url)
+          link.setAttribute('download', filename)
+          link.style.visibility = 'hidden'
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+        }
+      })
+
+      alert('Backup completed! 3 CSV files have been downloaded.')
+      
+    } catch (error) {
+      console.error('Backup failed:', error)
+      alert('Backup failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const menuItems = [
@@ -253,8 +382,19 @@ export default function Dashboard({ activeTab }) {
           ))}
         </nav>
 
-        {/* Logout Button */}
-        <div className="absolute bottom-4 left-4 right-4">
+        {/* Bottom Buttons */}
+        <div className="absolute bottom-4 left-4 right-4 space-y-2">
+          {/* Backup Button */}
+          <button
+            onClick={handleBackup}
+            disabled={loading}
+            className="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span>💾</span>
+            <span>{loading ? 'Backing up...' : 'Backup'}</span>
+          </button>
+          
+          {/* Logout Button */}
           <button
             onClick={handleLogout}
             className="w-full bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition flex items-center justify-center space-x-2"
@@ -403,23 +543,24 @@ export default function Dashboard({ activeTab }) {
                 </div>
               )}
 
-              {/* Member Growth Graph */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-semibold text-gray-800">Member Growth Trend</h3>
-                  <select
-                    value={graphYear}
-                    onChange={(e) => setGraphYear(Number(e.target.value))}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {years.map(year => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
+              {/* Graphs Grid - Side by Side */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Member Growth Line Graph */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-semibold text-gray-800">Member Growth Trend</h3>
+                    <select
+                      value={graphYear}
+                      onChange={(e) => setGraphYear(Number(e.target.value))}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      {years.map(year => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 {yearlyStats.length > 0 && (
                   <div className="relative" style={{ height: '350px' }}>
                     <svg width="100%" height="100%" viewBox="0 0 900 350">
@@ -584,6 +725,37 @@ export default function Dashboard({ activeTab }) {
                   </div>
                 )}
               </div>
+
+              {/* Inquiries & Conversions Bar Graph */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                  <h2 className="text-xl font-semibold text-gray-800">Inquiries & Conversions</h2>
+                  <select
+                    value={inquiryYear}
+                    onChange={e => setInquiryYear(Number(e.target.value))}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {years.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={inquiryStats.map(m => ({
+                    month: months[m.month - 1]?.label || m.month,
+                    Inquiries: m.totalInquiries,
+                    Joined: m.converted
+                  }))} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                    <XAxis dataKey="month" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip formatter={v => [v, 'Count']} />
+                    <Legend />
+                    <Bar dataKey="Inquiries" fill="#3b82f6" />
+                    <Bar dataKey="Joined" fill="#10b981" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
             </div>
           )}
 
@@ -603,55 +775,8 @@ export default function Dashboard({ activeTab }) {
             <PTClients />
           )}
 
-          {activeMenu === 'revenue' && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                <h2 className="text-2xl font-semibold text-gray-800">Revenue</h2>
-                <div className="flex flex-wrap items-center gap-3">
-                  <select
-                    value={revenueMonth}
-                    onChange={(e) => setRevenueMonth(Number(e.target.value))}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {months.map(month => (
-                      <option key={month.value} value={month.value}>{month.label}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={revenueYear}
-                    onChange={(e) => setRevenueYear(Number(e.target.value))}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {years.map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
-                <div className="p-4 rounded-lg bg-blue-50">
-                  <p className="text-sm text-blue-600">Total Payment (Members)</p>
-                  <p className="text-2xl font-bold text-blue-800">{revenueStats.memberPayment}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-green-50">
-                  <p className="text-sm text-green-600">Payments Collected (Members)</p>
-                  <p className="text-2xl font-bold text-green-800">{revenueStats.memberPaid}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-orange-50">
-                  <p className="text-sm text-orange-600">Due (Members)</p>
-                  <p className="text-2xl font-bold text-orange-800">{revenueStats.memberDue}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-purple-50">
-                  <p className="text-sm text-purple-600">Collected (PT Clients)</p>
-                  <p className="text-2xl font-bold text-purple-800">{revenueStats.ptPaid}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-rose-50">
-                  <p className="text-sm text-rose-600">Due (PT Clients)</p>
-                  <p className="text-2xl font-bold text-rose-800">{revenueStats.ptDue}</p>
-                </div>
-              </div>
-            </div>
+          {activeMenu === 'revenue' && (<Revenue months={months} years={years} />
+         
           )}
         </main>
       </div>

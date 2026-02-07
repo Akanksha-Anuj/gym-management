@@ -7,7 +7,112 @@
 
 ---
 
-## 🚀 Quick Deployment Steps
+## � Local Development Setup
+
+### Prerequisites
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [Node.js](https://nodejs.org/) (v16+ recommended)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) (recommended for easiest setup)
+
+### Option 1: Docker Setup (Recommended)
+
+**1. Start all services with Docker:**
+```bash
+cd "C:\Users\a522\OneDrive - Autodesk\Desktop\Gym Management"
+docker-compose up -d
+```
+
+This starts:
+- PostgreSQL database on port `5432` 
+- pgAdmin (database viewer) on port `8081`
+- Backend API on port `8080`
+
+**2. Start the frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+**3. Access your application:**
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:8080`
+- Database Admin (pgAdmin): `http://localhost:8081`
+
+**4. Default login credentials:**
+- Username: `admin`
+- Password: `Admin@123`
+
+### Option 2: Manual Setup
+
+**1. Start a local PostgreSQL database** (or use the production Supabase database)
+
+**2. Install backend dependencies & run:**
+```bash
+cd backend
+dotnet restore
+dotnet ef database update  # Apply database migrations
+dotnet run
+```
+Backend will run on `http://localhost:5056`
+
+**3. Install frontend dependencies & run:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Frontend will run on `http://localhost:3000`
+
+**4. Update frontend config for manual setup:**
+If using local backend on port 5056, update `frontend/src/config.js`:
+```javascript
+API_BASE_URL: "http://localhost:5056"
+```
+
+### Database Viewing Options
+
+**1. pgAdmin (Docker setup):**
+- URL: `http://localhost:8081`
+- Login: `admin@gym.com` / `admin123`
+- Add server: Host=`postgres`, Port=`5432`, Database=`gym_management`, Username=`gym_user`, Password=`gym_password123`
+
+**2. Supabase Dashboard (Production):**
+- Go to [Supabase Dashboard](https://supabase.com/dashboard)
+- Navigate to your project's Table Editor
+
+**3. VS Code Extensions:**
+- Install: PostgreSQL by Chris Kolkman
+- Install: SQLTools by Matheus Teixeira
+
+### Development Workflow
+
+**Daily startup:**
+```bash
+# Terminal 1: Start Docker services
+docker-compose up -d
+
+# Terminal 2: Start frontend
+cd frontend
+npm run dev
+```
+
+**Making database changes:**
+```bash
+cd backend
+dotnet ef migrations add YourMigrationName
+dotnet ef database update
+```
+
+**Shutdown:**
+```bash
+docker-compose down    # Stop Docker services
+# Ctrl+C in frontend terminal
+```
+
+---
+
+## �🚀 Quick Deployment Steps
 
 ### Backend Deployment to Azure
 
