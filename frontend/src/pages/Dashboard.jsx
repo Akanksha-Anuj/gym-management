@@ -4,6 +4,7 @@ import Members from '../components/Members'
 import Visitors from '../components/Visitors'
 import PTClients from '../components/PTClients'
 import config from '../config'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 export default function Dashboard({ activeTab }) {
   const navigate = useNavigate()
@@ -26,6 +27,8 @@ export default function Dashboard({ activeTab }) {
     ptPaid: 0,
     ptDue: 0
   })
+  const [inquiryYear, setInquiryYear] = useState(new Date().getFullYear())
+  const [inquiryStats, setInquiryStats] = useState([])
 
   const months = [
     { value: 1, label: 'January' },
@@ -77,6 +80,12 @@ export default function Dashboard({ activeTab }) {
       fetchRevenueStats()
     }
   }, [revenueMonth, revenueYear, activeMenu])
+
+  useEffect(() => {
+    if (activeMenu === 'dashboard') {
+      fetchInquiryStats()
+    }
+  }, [inquiryYear, activeMenu])
 
   const fetchStatistics = async () => {
     setLoading(true)
@@ -185,6 +194,27 @@ export default function Dashboard({ activeTab }) {
       })
     } catch (err) {
       console.error('Failed to fetch revenue stats:', err)
+    }
+  }
+
+  const fetchInquiryStats = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(
+        `${config.API_BASE_URL}/api/visitors/statistics/yearly?year=${inquiryYear}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      if (response.ok) {
+        const data = await response.json()
+        setInquiryStats(data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch inquiry stats:', err)
     }
   }
 
@@ -512,23 +542,24 @@ export default function Dashboard({ activeTab }) {
                 </div>
               )}
 
-              {/* Member Growth Graph */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-semibold text-gray-800">Member Growth Trend</h3>
-                  <select
-                    value={graphYear}
-                    onChange={(e) => setGraphYear(Number(e.target.value))}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {years.map(year => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
+              {/* Graphs Grid - Side by Side */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Member Growth Line Graph */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-semibold text-gray-800">Member Growth Trend</h3>
+                    <select
+                      value={graphYear}
+                      onChange={(e) => setGraphYear(Number(e.target.value))}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      {years.map(year => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 {yearlyStats.length > 0 && (
                   <div className="relative" style={{ height: '350px' }}>
                     <svg width="100%" height="100%" viewBox="0 0 900 350">
@@ -693,6 +724,37 @@ export default function Dashboard({ activeTab }) {
                   </div>
                 )}
               </div>
+
+              {/* Inquiries & Conversions Bar Graph */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                  <h2 className="text-xl font-semibold text-gray-800">Inquiries & Conversions</h2>
+                  <select
+                    value={inquiryYear}
+                    onChange={e => setInquiryYear(Number(e.target.value))}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {years.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={inquiryStats.map(m => ({
+                    month: months[m.month - 1]?.label || m.month,
+                    Inquiries: m.totalInquiries,
+                    Joined: m.converted
+                  }))} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                    <XAxis dataKey="month" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip formatter={v => [v, 'Count']} />
+                    <Legend />
+                    <Bar dataKey="Inquiries" fill="#3b82f6" />
+                    <Bar dataKey="Joined" fill="#10b981" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
             </div>
           )}
 
