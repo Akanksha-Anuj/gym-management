@@ -313,7 +313,7 @@ export default function Members() {
 
   const getFilteredAndSortedMembers = () => {
     let filtered = members.filter(member =>
-      member.name.toLowerCase().includes(searchTerm.toLowerCase())
+      member.name.toLowerCase().includes(searchTerm.toLowerCase()) || member.contactNumber.toLowerCase().includes(searchTerm.toLowerCase())
     )
     if (showOnlyWithDues) {
       filtered = filtered.filter(member => Number(member.due) > 0)
@@ -382,7 +382,7 @@ export default function Members() {
         <div className="relative">
           <input
             type="text"
-            placeholder="Search by name..."
+            placeholder="Search by name/number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full md:w-96 px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
