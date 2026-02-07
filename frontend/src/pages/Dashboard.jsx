@@ -5,6 +5,7 @@ import Visitors from '../components/Visitors'
 import PTClients from '../components/PTClients'
 import config from '../config'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import Revenue from '../components/Revenue'
 
 export default function Dashboard({ activeTab }) {
   const navigate = useNavigate()
@@ -774,55 +775,8 @@ export default function Dashboard({ activeTab }) {
             <PTClients />
           )}
 
-          {activeMenu === 'revenue' && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                <h2 className="text-2xl font-semibold text-gray-800">Revenue</h2>
-                <div className="flex flex-wrap items-center gap-3">
-                  <select
-                    value={revenueMonth}
-                    onChange={(e) => setRevenueMonth(Number(e.target.value))}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {months.map(month => (
-                      <option key={month.value} value={month.value}>{month.label}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={revenueYear}
-                    onChange={(e) => setRevenueYear(Number(e.target.value))}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {years.map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
-                <div className="p-4 rounded-lg bg-blue-50">
-                  <p className="text-sm text-blue-600">Total Payment (Members)</p>
-                  <p className="text-2xl font-bold text-blue-800">{revenueStats.memberPayment}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-green-50">
-                  <p className="text-sm text-green-600">Payments Collected (Members)</p>
-                  <p className="text-2xl font-bold text-green-800">{revenueStats.memberPaid}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-orange-50">
-                  <p className="text-sm text-orange-600">Due (Members)</p>
-                  <p className="text-2xl font-bold text-orange-800">{revenueStats.memberDue}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-purple-50">
-                  <p className="text-sm text-purple-600">Collected (PT Clients)</p>
-                  <p className="text-2xl font-bold text-purple-800">{revenueStats.ptPaid}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-rose-50">
-                  <p className="text-sm text-rose-600">Due (PT Clients)</p>
-                  <p className="text-2xl font-bold text-rose-800">{revenueStats.ptDue}</p>
-                </div>
-              </div>
-            </div>
+          {activeMenu === 'revenue' && (<Revenue months={months} years={years} />
+         
           )}
         </main>
       </div>
