@@ -1,7 +1,7 @@
 const config = {
-  // Your actual Azure App Service URL (use HTTPS for production)
-  API_BASE_URL: 'https://calm-water-db8d0e2cfc5c4067b7ef2d0eb82b0d18.azurewebsites.net'
-   
+  // Backend API URL - Deployed on Render
+  // For local development, set VITE_API_BASE_URL=http://localhost:8080
+  API_BASE_URL: 'https://gym-management-8kth.onrender.com'
 }
 
 export default config

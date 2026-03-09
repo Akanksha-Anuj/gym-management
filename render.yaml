@@ -1,0 +1,25 @@
+services:
+  # Backend API Service
+  - type: web
+    name: gym-management-api
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: singapore
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        sync: false  # Set this manually in Render dashboard
+      - key: Jwt__Key
+        generateValue: true
+        sync: false
+      - key: Jwt__Issuer
+        value: GymManagementApp
+      - key: Jwt__Audience
+        value: GymManagementAppUsers
+      - key: Jwt__ExpiryInMinutes
+        value: 60
+    healthCheckPath: /
+    autoDeploy: true

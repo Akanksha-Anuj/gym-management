@@ -2,8 +2,8 @@
 
 ## Architecture Overview
 - **Frontend**: React + Vite → Deployed on Vercel
-- **Backend**: ASP.NET Core 8.0 → Deployed on Azure App Service (Linux)
-- **Database**: PostgreSQL → Hosted on Supabase
+- **Backend**: ASP.NET Core 8.0 → Deployed on Render (Free Tier)
+- **Database**: PostgreSQL → Hosted on Supabase (Free Tier)
 
 ---
 
@@ -114,56 +114,96 @@ docker-compose down    # Stop Docker services
 
 ## �🚀 Quick Deployment Steps
 
-### Backend Deployment to Azure
+### Backend Deployment to Render
 
-1. **Build & Package**
-   ```bash
-   cd "C:\Users\a522\OneDrive - Autodesk\Desktop\Gym Management\backend"
-   dotnet publish -c Release -o ./publish
-   cd publish
-   Compress-Archive -Path * -DestinationPath "..\deployment.zip" -Force
-   ```
+#### 1. Prepare Your GitHub Repository
 
-2. **Deploy to Azure**
-   - Go to [Azure Portal](https://portal.azure.com)
-   - Navigate to App Service: `calm-water-db8d0e2cfc5c4067b7ef2d0eb82b0d18`
-   - Development Tools → Advanced Tools → Go (opens Kudu)
-   - Navigate to `/site/wwwroot/`
-   - Upload & extract `deployment.zip`
+```bash
+cd "C:\Users\a522\OneDrive - Autodesk\Desktop\Gym Management"
+
+# Initialize git if not done already
+git init
+git add .
+git commit -m "Initial commit for Render deployment"
+
+# Create a repo on GitHub and push
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+git branch -M main
+git push -u origin main
+```
+
+#### 2. Create Web Service on Render
+
+1. **Go to [Render Dashboard](https://dashboard.render.com/)**
+2. **Click "New +" → "Web Service"**
+3. **Connect your GitHub repository**
+4. **Configure the service:**
+   - **Name**: `gym-management-api` (or any name you prefer)
+   - **Region**: Choose closest to you (Singapore for Asia-Pacific)
+   - **Branch**: `main`
+   - **Root Directory**: `backend`
+   - **Environment**: `Docker`
+   - **Plan**: `Free`
+
+#### 3. Configure Environment Variables
+
+In the Render dashboard, add these environment variables:
+
+| Key | Value |
+|-----|-------|
+| `ASPNETCORE_ENVIRONMENT` | `Production` |
+| `ConnectionStrings__DefaultConnection` | `User Id=postgres.hbykqocudjcwebobpftu;Password=9599454679Rr!;Server=aws-1-ap-southeast-2.pooler.supabase.com;Port=5432;Database=postgres;SSL Mode=Require;Trust Server Certificate=true` |
+| `Jwt__Key` | `YourSecretKeyHere_MustBe32CharsOrMore_ChangeThis!` |
+| `Jwt__Issuer` | `GymManagementApp` |
+| `Jwt__Audience` | `GymManagementAppUsers` |
+| `Jwt__ExpiryInMinutes` | `60` |
+
+**⚠️ Important:** Generate a new JWT secret key for production!
+
+#### 4. Deploy
+
+- Click **"Create Web Service"**
+- Render will automatically detect your Dockerfile and start building
+- Wait 5-10 minutes for initial deployment
+- Your API will be available at: `https://gym-management-api.onrender.com` (or your chosen name)
 
 ### Frontend Deployment to Vercel
 
-1. **Push to Git** (if connected)
+1. **Update frontend config** in `frontend/src/config.js`:
+   ```javascript
+   const config = {
+     API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 
+                   "https://YOUR-SERVICE-NAME.onrender.com"
+   };
+   export default config;
+   ```
+
+2. **Push to Git** (if connected)
    ```bash
-   cd "C:\Users\a522\OneDrive - Autodesk\Desktop\Gym Management\frontend"
+   cd frontend
    git add .
-   git commit -m "Update frontend"
+   git commit -m "Update backend URL for Render"
    git push
    ```
 
-2. **Manual Upload**
-   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
-   - Drag & drop frontend folder or use Vercel CLI
+3. **Vercel Auto-deploys** your changes automatically if connected via GitHub
 
 ---
 
-## ⚙️ Azure App Service Configuration
+## ⚙️ Render Configuration Details
 
-### Required App Settings
-```
-JWT__Key = YourSecretKeyHere_MustBe32CharsOrMore_ChangeThis!
-JWT__Issuer = GymManagementApp
-JWT__Audience = GymManagementAppUsers
-JWT__ExpiryInMinutes = 60
-ASPNETCORE_ENVIRONMENT = Production
-```
+**Free Tier Features:**
+- ✅ 750 hours/month (enough for 24/7 operation)
+- ✅ 512 MB RAM
+- ✅ Free SSL certificates
+- ✅ Auto-deploy from GitHub on every push
+- ⚠️ Spins down after 15 minutes of inactivity
+- ⚠️ Cold start takes ~30 seconds when waking up
 
-### Required Connection Strings
-```
-Name: DefaultConnection
-Type: PostgreSQL
-Value: User Id=postgres.hbykqocudjcwebobpftu;Password=9599454679Rr!;Server=aws-1-ap-southeast-2.pooler.supabase.com;Port=5432;Database=postgres;SSL Mode=Require;Trust Server Certificate=true
-```
+**Monitoring & Logs:**
+- View real-time logs in Render Dashboard → Your Service → Logs
+- Check deployment status and build history
+- Health check endpoint: `/` (already configured)
 
 ---
 
@@ -204,7 +244,7 @@ Value: User Id=postgres.hbykqocudjcwebobpftu;Password=9599454679Rr!;Server=aws-1
 
 ### Production URLs
 - **Frontend**: https://gym-management-eight-sooty.vercel.app
-- **Backend**: https://calm-water-db8d0e2cfc5c4067b7ef2d0eb82b0d18.azurewebsites.net
+- **Backend**: https://gym-management-8kth.onrender.com
 - **Database**: Supabase PostgreSQL (managed)
 
 ### Key API Endpoints
@@ -225,25 +265,32 @@ Value: User Id=postgres.hbykqocudjcwebobpftu;Password=9599454679Rr!;Server=aws-1
 #### 1. **CORS Errors**
 **Symptoms**: Frontend can't connect to backend
 **Solution**: 
-- Check Azure App Service CORS settings
-- Verify frontend URL is allowed in CORS policy
-- Current policy: `AllowAnyOrigin()` (should work)
+- Check CORS config in Program.cs
+- Current policy: `AllowAnyOrigin()` (should work for all origins)
+- Verify backend URL is correct in frontend config
 
 #### 2. **JWT Errors (500 Internal Server Error)**
 **Symptoms**: Login fails with 500 error
 **Solution**: 
-- Verify JWT settings in Azure App Service
-- Check that JWT__Key, JWT__Issuer, JWT__Audience are set
-- JWT__Key must be at least 32 characters
+- Verify JWT environment variables in Render dashboard
+- Check that Jwt__Key, Jwt__Issuer, Jwt__Audience are set correctly
+- JWT Key must be at least 32 characters
 
 #### 3. **Database Connection Errors**
 **Symptoms**: Can't fetch data, database errors
 **Solution**: 
-- Verify Supabase connection string in Azure
+- Verify Supabase connection string in Render environment variables
 - Check Supabase dashboard for connection limits
-- Ensure SSL Mode=Require is set
+- Ensure SSL Mode=Require is set in connection string
 
-#### 4. **404 on Page Refresh (Vercel)**
+#### 4. **Cold Start Delays**
+**Symptoms**: First request after inactivity takes 30+ seconds
+**Solution**: 
+- This is normal for Render free tier (service spins down after 15 min)
+- Consider upgrading to paid tier for always-on service
+- Use external monitoring service (like UptimeRobot) to ping every 14 minutes
+
+#### 5. **404 on Page Refresh (Vercel)**
 **Symptoms**: Refreshing page shows 404
 **Solution**: 
 - Ensure `vercel.json` contains rewrite rules
@@ -253,32 +300,34 @@ Value: User Id=postgres.hbykqocudjcwebobpftu;Password=9599454679Rr!;Server=aws-1
 
 #### Check Backend Health
 ```bash
-curl https://calm-water-db8d0e2cfc5c4067b7ef2d0eb82b0d18.azurewebsites.net/
+curl https://YOUR-SERVICE-NAME.onrender.com/
 ```
 
 #### Test Authentication
 ```bash
-curl -X POST https://calm-water-db8d0e2cfc5c4067b7ef2d0eb82b0d18.azurewebsites.net/api/auth/login \
+curl -X POST https://YOUR-SERVICE-NAME.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"Admin@123"}'
 ```
 
-#### Azure Logs
-- Azure Portal → App Service → Monitoring → Log stream
+#### View Logs
+- Render Dashboard → Your Service → Logs tab
+- Real-time log streaming available
 
 ---
 
 ## 📝 Pre-Deployment Checklist
 
-### Before Deploying Backend
+### Before Deploying Backend to Render
+- [ ] Code pushed to GitHub repository
 - [ ] Test locally with `dotnet run`
 - [ ] Run database migrations if needed
-- [ ] Update appsettings.json if needed
+- [ ] Verify Dockerfile builds successfully
+- [ ] Prepare environment variables (connection string, JWT settings)
 - [ ] Check for compilation warnings
-- [ ] Verify CORS settings for production
 
-### Before Deploying Frontend
-- [ ] Update API URLs in `src/config.js`
+### Before Deploying Frontend to Vercel
+- [ ] Update API URL in `src/config.js` with Render backend URL
 - [ ] Test build locally with `npm run build`
 - [ ] Check console for errors
 - [ ] Verify routing works correctly
@@ -286,9 +335,10 @@ curl -X POST https://calm-water-db8d0e2cfc5c4067b7ef2d0eb82b0d18.azurewebsites.n
 ### After Deployment
 - [ ] Test login functionality
 - [ ] Test CRUD operations (Create, Read, Update, Delete)
-- [ ] Check Azure logs for errors
-- [ ] Verify database connections
+- [ ] Check Render logs for errors
+- [ ] Verify database connections work
 - [ ] Test page refresh functionality on Vercel
+- [ ] Monitor for cold start performance
 
 ---
 
