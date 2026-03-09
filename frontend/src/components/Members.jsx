@@ -20,7 +20,8 @@ export default function Members() {
     due: 0,
     subscriptionStartDate: '',
     subscriptionExpiryDate: '',
-    bagProvided: false
+    bagProvided: false,
+    lockerNumber: ''
   })
   const [showOnlyWithDues, setShowOnlyWithDues] = useState(false)
 
@@ -149,7 +150,8 @@ export default function Members() {
         due: 0,
         subscriptionStartDate: '',
         subscriptionExpiryDate: '',
-        bagProvided: false
+        bagProvided: false,
+        lockerNumber: ''
       })
       setShowAddForm(false)
       
@@ -179,7 +181,8 @@ export default function Members() {
       due: member.due,
       subscriptionStartDate: member.subscriptionStartDate.split('T')[0],
       subscriptionExpiryDate: member.subscriptionExpiryDate.split('T')[0],
-      bagProvided: member.bagProvided
+      bagProvided: member.bagProvided,
+      lockerNumber: member.lockerNumber || ''
     })
   }
 
@@ -231,8 +234,10 @@ export default function Members() {
         payment: 0,
         paid: 0,
         due: 0,
+        subscriptionStartDate: '',
         subscriptionExpiryDate: '',
-        bagProvided: false
+        bagProvided: false,
+        lockerNumber: ''
       })
       setEditingMember(null)
       
@@ -256,7 +261,8 @@ export default function Members() {
       due: 0,
       subscriptionStartDate: '',
       subscriptionExpiryDate: '',
-      bagProvided: false
+      bagProvided: false,
+      lockerNumber: ''
     })
   }
 
@@ -544,6 +550,20 @@ export default function Members() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Locker Number
+                  </label>
+                  <input
+                    type="text"
+                    name="lockerNumber"
+                    value={formData.lockerNumber}
+                    onChange={handleInputChange}
+                    placeholder="e.g., L-101"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
                 <div className="md:col-span-2">
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
@@ -730,6 +750,20 @@ export default function Members() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Locker Number
+                  </label>
+                  <input
+                    type="text"
+                    name="lockerNumber"
+                    value={formData.lockerNumber}
+                    onChange={handleInputChange}
+                    placeholder="e.g., L-101"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
                 <div className="md:col-span-2">
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
@@ -813,6 +847,7 @@ export default function Members() {
                     </span>
                   </button>
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Locker</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bag</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
               </tr>
@@ -869,6 +904,9 @@ export default function Members() {
                         </span>
                       )}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {member.lockerNumber || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input

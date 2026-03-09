@@ -14,5 +14,6 @@ namespace backend.models
         public DateTime subscriptionStartDate { get; set; }
         public DateTime subscriptionExpiryDate { get; set; }
         public bool bagProvided { get; set; }
+        public string? lockerNumber { get; set; }
     }
 }
