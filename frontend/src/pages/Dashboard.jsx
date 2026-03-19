@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Members from '../components/Members'
 import Visitors from '../components/Visitors'
 import PTClients from '../components/PTClients'
+import Locker from '../components/Locker'
 import config from '../config'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import Revenue from '../components/Revenue'
@@ -56,6 +57,8 @@ export default function Dashboard({ activeTab }) {
       setActiveMenu('visitors')
     } else if (location.pathname === '/ptclients') {
       setActiveMenu('ptclients')
+    } else if (location.pathname === '/locker') {
+      setActiveMenu('locker')
     } else if (location.pathname === '/revenue') {
       setActiveMenu('revenue')
     } else if (location.pathname === '/dashboard') {
@@ -327,17 +330,18 @@ export default function Dashboard({ activeTab }) {
     { id: 'members', name: 'Members', icon: '👥' },
     { id: 'visitors', name: 'Visitors', icon: '🚶' },
     { id: 'ptclients', name: 'PT Clients', icon: '🏋️' },
+    { id: 'locker', name: 'Locker', icon: '🔐' },
     { id: 'revenue', name: 'Revenue', icon: '💰' },
   ]
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar */}
-      <aside className={`bg-gradient-to-b from-blue-600 to-blue-800 text-white w-64 min-h-screen fixed lg:static transition-transform duration-300 ease-in-out z-30 ${
+    <div className="min-h-screen bg-gray-100">
+      {/* Sidebar - Fixed on all screen sizes */}
+      <aside className={`bg-gradient-to-b from-blue-600 to-blue-800 text-white w-64 h-screen fixed transition-transform duration-300 ease-in-out z-30 flex flex-col ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
         {/* Logo */}
-        <div className="p-6 border-b border-blue-500">
+        <div className="p-6 border-b border-blue-500 flex-shrink-0">
           <div className="flex items-center justify-center mb-2">
             <img 
               src="/gym-logo.png" 
@@ -349,8 +353,8 @@ export default function Dashboard({ activeTab }) {
           <h2 className="text-xl font-bold text-center">Gym Management</h2>
         </div>
 
-        {/* Menu Items */}
-        <nav className="p-4">
+        {/* Menu Items - Scrollable */}
+        <nav className="p-4 flex-1 overflow-y-auto">
           {menuItems.map((item) => (
             <button
               key={item.id}
@@ -361,6 +365,8 @@ export default function Dashboard({ activeTab }) {
                   navigate('/visitors')
                 } else if (item.id === 'ptclients') {
                   navigate('/ptclients')
+                } else if (item.id === 'locker') {
+                  navigate('/locker')
                 } else if (item.id === 'revenue') {
                   navigate('/revenue')
                 } else if (item.id === 'dashboard') {
@@ -382,8 +388,8 @@ export default function Dashboard({ activeTab }) {
           ))}
         </nav>
 
-        {/* Bottom Buttons */}
-        <div className="absolute bottom-4 left-4 right-4 space-y-2">
+        {/* Bottom Buttons - Always Visible */}
+        <div className="p-4 border-t border-blue-500 flex-shrink-0 space-y-2">
           {/* Backup Button */}
           <button
             onClick={handleBackup}
@@ -413,8 +419,8 @@ export default function Dashboard({ activeTab }) {
         ></div>
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      {/* Main Content - With left margin for sidebar */}
+      <div className="lg:ml-64 min-h-screen flex flex-col">
         {/* Top Navigation Bar */}
         <nav className="bg-white shadow-lg sticky top-0 z-10">
           <div className="px-4 sm:px-6 lg:px-8">
@@ -773,6 +779,10 @@ export default function Dashboard({ activeTab }) {
 
           {activeMenu === 'ptclients' && (
             <PTClients />
+          )}
+
+          {activeMenu === 'locker' && (
+            <Locker />
           )}
 
           {activeMenu === 'revenue' && (<Revenue months={months} years={years} />

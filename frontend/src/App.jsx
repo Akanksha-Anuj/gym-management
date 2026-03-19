@@ -39,6 +39,10 @@ function App() {
           element={isAuthenticated ? <Dashboard activeTab="ptclients" /> : <Navigate to="/login" />}
         />
         <Route
+          path="/locker"
+          element={isAuthenticated ? <Dashboard activeTab="locker" /> : <Navigate to="/login" />}
+        />
+        <Route
           path="/revenue"
           element={isAuthenticated ? <Dashboard activeTab="revenue" /> : <Navigate to="/login" />}
         />

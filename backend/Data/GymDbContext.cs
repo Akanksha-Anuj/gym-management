@@ -14,6 +14,7 @@ namespace backend.Data
         public DbSet<Visitor> Visitors { get; set; }
         public DbSet<PTClient> PTClients { get; set; }
         public DbSet<Expense> Expenses { get; set; }
+        public DbSet<Locker> Lockers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -64,6 +65,17 @@ namespace backend.Data
                 entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").IsRequired();
                 entity.Property(e => e.ExpenseType).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Remarks).HasMaxLength(500);
+            });
+
+            modelBuilder.Entity<Locker>(entity =>
+            {
+                entity.HasKey(e => e.id);
+                entity.Property(e => e.name).IsRequired();
+                entity.Property(e => e.contactNumber).IsRequired();
+                entity.Property(e => e.duration).IsRequired();
+                entity.Property(e => e.startDate).IsRequired();
+                entity.Property(e => e.endDate).IsRequired();
+                entity.Property(e => e.lockerNumber).IsRequired();
             });
         }
     }
