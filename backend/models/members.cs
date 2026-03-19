@@ -15,5 +15,8 @@ namespace backend.models
         public DateTime subscriptionExpiryDate { get; set; }
         public bool bagProvided { get; set; }
         public string? lockerNumber { get; set; }
+        public bool contactedForPayment { get; set; } = false;
+        public bool didRespond { get; set; } = false;
+        public string? notes { get; set; }
     }
 }

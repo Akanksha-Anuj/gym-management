@@ -24,6 +24,14 @@ export default function Members() {
     lockerNumber: ''
   })
   const [showOnlyWithDues, setShowOnlyWithDues] = useState(false)
+  const [selectedMember, setSelectedMember] = useState(null)
+  const [sidePanel, setSidePanel] = useState({
+    contactedForPayment: false,
+    didRespond: false,
+    notes: ''
+  })
+  const [isCustomPlan, setIsCustomPlan] = useState(false)
+  const [customPlanValue, setCustomPlanValue] = useState('')
 
   useEffect(() => {
     fetchMembers()
@@ -110,14 +118,41 @@ export default function Members() {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
+    
+    // Handle subscription plan selection
+    if (name === 'subscriptionPlan') {
+      if (value === 'Custom') {
+        setIsCustomPlan(true)
+        setFormData(prev => ({
+          ...prev,
+          subscriptionPlan: ''
+        }))
+      } else {
+        setIsCustomPlan(false)
+        setCustomPlanValue('')
+        setFormData(prev => ({
+          ...prev,
+          subscriptionPlan: value
+        }))
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }))
+    }
   }
 
   const handleAddMember = async (e) => {
     e.preventDefault()
+    
+    // Use custom plan value if custom is selected
+    const finalPlan = isCustomPlan ? customPlanValue : formData.subscriptionPlan
+    
+    if (isCustomPlan && !customPlanValue.trim()) {
+      alert('Please enter a custom subscription plan')
+      return
+    }
     
     try {
       const token = localStorage.getItem('token')
@@ -129,9 +164,14 @@ export default function Members() {
         },
         body: JSON.stringify({
           ...formData,
+          subscriptionPlan: finalPlan,
           payment: parseInt(formData.payment),
           paid: parseInt(formData.paid),
-          due: parseInt(formData.due)
+          due: parseInt(formData.due),
+          // Initialize follow-up fields with default values
+          contactedForPayment: false,
+          didRespond: false,
+          notes: ''
         })
       })
 
@@ -153,6 +193,8 @@ export default function Members() {
         bagProvided: false,
         lockerNumber: ''
       })
+      setIsCustomPlan(false)
+      setCustomPlanValue('')
       setShowAddForm(false)
       
       // Refresh the list
@@ -170,12 +212,19 @@ export default function Members() {
       return
     }
     
+    // Check if it's a custom plan (not in predefined list)
+    const predefinedPlans = ['Monthly', 'Quarterly', 'Half-Yearly', 'Yearly']
+    const isCustom = !predefinedPlans.includes(member.subscriptionPlan)
+    
     setEditingMember(member)
+    setIsCustomPlan(isCustom)
+    setCustomPlanValue(isCustom ? member.subscriptionPlan : '')
+    
     setFormData({
       name: member.name,
       contactNumber: member.contactNumber,
       address: member.address,
-      subscriptionPlan: member.subscriptionPlan,
+      subscriptionPlan: isCustom ? '' : member.subscriptionPlan,
       payment: member.payment,
       paid: member.paid,
       due: member.due,
@@ -204,6 +253,14 @@ export default function Members() {
       return
     }
     
+    // Use custom plan value if custom is selected
+    const finalPlan = isCustomPlan ? customPlanValue : formData.subscriptionPlan
+    
+    if (isCustomPlan && !customPlanValue.trim()) {
+      alert('Please enter a custom subscription plan')
+      return
+    }
+    
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`${config.API_BASE_URL}/api/members/${editingMember.id}`, {
@@ -215,9 +272,14 @@ export default function Members() {
         body: JSON.stringify({
           id: editingMember.id,
           ...formData,
+          subscriptionPlan: finalPlan,
           payment: parseInt(formData.payment),
           paid: parseInt(formData.paid),
-          due: parseInt(formData.due)
+          due: parseInt(formData.due),
+          // Preserve the follow-up fields
+          contactedForPayment: editingMember.contactedForPayment || false,
+          didRespond: editingMember.didRespond || false,
+          notes: editingMember.notes || ''
         })
       })
 
@@ -239,6 +301,8 @@ export default function Members() {
         bagProvided: false,
         lockerNumber: ''
       })
+      setIsCustomPlan(false)
+      setCustomPlanValue('')
       setEditingMember(null)
       
       // Refresh the list
@@ -251,6 +315,8 @@ export default function Members() {
   const handleCloseForm = () => {
     setShowAddForm(false)
     setEditingMember(null)
+    setIsCustomPlan(false)
+    setCustomPlanValue('')
     setFormData({
       name: '',
       contactNumber: '',
@@ -264,6 +330,57 @@ export default function Members() {
       bagProvided: false,
       lockerNumber: ''
     })
+  }
+
+  const handleRowClick = (member) => {
+    setSelectedMember(member)
+    // Load existing values from member
+    setSidePanel({
+      contactedForPayment: member.contactedForPayment || false,
+      didRespond: member.didRespond || false,
+      notes: member.notes || ''
+    })
+  }
+
+  const handleCloseSidePanel = () => {
+    setSelectedMember(null)
+  }
+
+  const handleSidePanelChange = (field, value) => {
+    setSidePanel(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleSaveSidePanelData = async () => {
+    if (!selectedMember) return
+
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${config.API_BASE_URL}/api/members/${selectedMember.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...selectedMember,
+          contactedForPayment: sidePanel.contactedForPayment,
+          didRespond: sidePanel.didRespond,
+          notes: sidePanel.notes
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save member data')
+      }
+
+      alert('Notes and follow-up status saved successfully!')
+      fetchMembers()
+    } catch (err) {
+      alert('Error: ' + err.message)
+    }
   }
 
   const getInitials = (name) => {
@@ -464,7 +581,7 @@ export default function Members() {
                   </label>
                   <select
                     name="subscriptionPlan"
-                    value={formData.subscriptionPlan}
+                    value={isCustomPlan ? 'Custom' : formData.subscriptionPlan}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
@@ -474,8 +591,25 @@ export default function Members() {
                     <option value="Quarterly">Quarterly</option>
                     <option value="Half-Yearly">Half-Yearly</option>
                     <option value="Yearly">Yearly</option>
+                    <option value="Custom">Custom</option>
                   </select>
                 </div>
+
+                {isCustomPlan && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Custom Plan *
+                    </label>
+                    <input
+                      type="text"
+                      value={customPlanValue}
+                      onChange={(e) => setCustomPlanValue(e.target.value)}
+                      placeholder="e.g., 15 Days, 7 Weeks"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -664,7 +798,7 @@ export default function Members() {
                   </label>
                   <select
                     name="subscriptionPlan"
-                    value={formData.subscriptionPlan}
+                    value={isCustomPlan ? 'Custom' : formData.subscriptionPlan}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
@@ -674,8 +808,25 @@ export default function Members() {
                     <option value="Quarterly">Quarterly</option>
                     <option value="Half-Yearly">Half-Yearly</option>
                     <option value="Yearly">Yearly</option>
+                    <option value="Custom">Custom</option>
                   </select>
                 </div>
+
+                {isCustomPlan && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Custom Plan *
+                    </label>
+                    <input
+                      type="text"
+                      value={customPlanValue}
+                      onChange={(e) => setCustomPlanValue(e.target.value)}
+                      placeholder="e.g., 15 Days, 7 Weeks"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -798,6 +949,220 @@ export default function Members() {
         </div>
       )}
 
+      {/* Member Details Side Panel */}
+      {selectedMember && (
+        <>
+          {/* Overlay */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-30 z-40 transition-opacity"
+            onClick={handleCloseSidePanel}
+          />
+          
+          {/* Side Panel */}
+          <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-white shadow-2xl z-50 overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-bold mb-1">Member Details</h3>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center font-semibold">
+                      {getInitials(selectedMember.name)}
+                    </div>
+                    <span className="font-medium">{selectedMember.name}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={handleCloseSidePanel}
+                  className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-1 transition"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Basic Information */}
+              <div>
+                <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">Basic Information</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs text-gray-500">Name</label>
+                    <p className="text-sm font-medium text-gray-900">{selectedMember.name}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Contact Number</label>
+                    <p className="text-sm font-medium text-gray-900">{selectedMember.contactNumber || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Address</label>
+                    <p className="text-sm font-medium text-gray-900">{selectedMember.address}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subscription Details */}
+              <div className="border-t pt-6">
+                <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">Subscription Details</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs text-gray-500">Plan</label>
+                    <p className="text-sm">
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                        {selectedMember.subscriptionPlan}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-gray-500">Start Date</label>
+                      <p className="text-sm font-medium text-gray-900">{formatDate(selectedMember.subscriptionStartDate)}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Expiry Date</label>
+                      <p className="text-sm font-medium text-gray-900">{formatDate(selectedMember.subscriptionExpiryDate)}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Status</label>
+                    <p className="text-sm">
+                      {(() => {
+                        const status = getSubscriptionStatus(selectedMember.subscriptionExpiryDate)
+                        return (
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            status.status === 'expired' 
+                              ? 'bg-red-100 text-red-800' 
+                              : status.status === 'expiring-soon'
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {status.label}
+                          </span>
+                        )
+                      })()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Details */}
+              <div className="border-t pt-6">
+                <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">Payment Details</h4>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <label className="text-xs text-gray-500">Total Amount</label>
+                    <p className="text-lg font-bold text-gray-900">₹{selectedMember.payment}</p>
+                  </div>
+                  <div className="bg-green-50 p-3 rounded-lg">
+                    <label className="text-xs text-green-600">Paid</label>
+                    <p className="text-lg font-bold text-green-700">₹{selectedMember.paid}</p>
+                  </div>
+                  <div className="bg-red-50 p-3 rounded-lg">
+                    <label className="text-xs text-red-600">Due</label>
+                    <p className="text-lg font-bold text-red-700">₹{selectedMember.due}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Details */}
+              <div className="border-t pt-6">
+                <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">Additional Details</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs text-gray-500">Locker Number</label>
+                    <p className="text-sm font-medium text-gray-900">{selectedMember.lockerNumber || 'Not Assigned'}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Bag Provided</label>
+                    <p className="text-sm font-medium text-gray-900">
+                      {selectedMember.bagProvided ? (
+                        <span className="text-green-600">✓ Yes</span>
+                      ) : (
+                        <span className="text-gray-400">✗ No</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Follow-up Section */}
+              <div className="border-t pt-6">
+                <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">Follow-up Status</h4>
+                <div className="space-y-3">
+                  <label className="flex items-center space-x-2 cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition">
+                    <input
+                      type="checkbox"
+                      checked={sidePanel.contactedForPayment}
+                      onChange={(e) => handleSidePanelChange('contactedForPayment', e.target.checked)}
+                      className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Contacted for payment/renewal</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2 cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition">
+                    <input
+                      type="checkbox"
+                      checked={sidePanel.didRespond}
+                      onChange={(e) => handleSidePanelChange('didRespond', e.target.checked)}
+                      className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Did they respond</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Notes Section */}
+              <div className="border-t pt-6">
+                <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">Notes</h4>
+                <textarea
+                  value={sidePanel.notes}
+                  onChange={(e) => handleSidePanelChange('notes', e.target.value)}
+                  rows="10"
+                  placeholder="Add any notes or details about this member..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
+                />
+                <p className="text-xs text-gray-500 mt-1">Maximum 10 lines</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="border-t pt-6 space-y-3">
+                <button
+                  onClick={handleSaveSidePanelData}
+                  className="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition font-medium flex items-center justify-center space-x-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Save Notes & Follow-up Status</span>
+                </button>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleCloseSidePanel()
+                      handleEdit(selectedMember)
+                    }}
+                    className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+                  >
+                    Edit Member
+                  </button>
+                  <button
+                    onClick={handleCloseSidePanel}
+                    className="px-4 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {filteredMembers.length === 0 ? (
         <div className="p-6 text-center text-gray-500">
           {searchTerm ? 'No members found matching your search.' : 'No members found. Add your first member to get started.'}
@@ -856,7 +1221,11 @@ export default function Members() {
               {filteredMembers.map((member, index) => {
                 const subscriptionStatus = getSubscriptionStatus(member.subscriptionExpiryDate)
                 return (
-                <tr key={member.id} className={`transition ${getRowBackgroundClass(member.subscriptionExpiryDate)}`}>
+                <tr 
+                  key={member.id} 
+                  onClick={() => handleRowClick(member)}
+                  className={`transition cursor-pointer ${getRowBackgroundClass(member.subscriptionExpiryDate)}`}
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {index + 1}
                   </td>
@@ -919,7 +1288,10 @@ export default function Members() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-3">
                       <button
-                        onClick={() => handleEdit(member)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEdit(member)
+                        }}
                         className="text-blue-600 hover:text-blue-900 transition"
                         title="Edit member"
                       >
@@ -928,7 +1300,10 @@ export default function Members() {
                         </svg>
                       </button>
                       <button
-                        onClick={() => handleDelete(member.id)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(member.id)
+                        }}
                         className="text-red-600 hover:text-red-900 transition"
                         title="Delete member"
                       >
