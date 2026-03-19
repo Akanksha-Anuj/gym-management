@@ -17,11 +17,8 @@ WORKDIR /app
 # Copy the build output
 COPY --from=build-env /app/out .
 
-# Expose the port
+# Expose the port (Render will use $PORT env var)
 EXPOSE 8080
-
-# Set environment variables
-ENV ASPNETCORE_URLS=http://+:8080
 
 # Run the application
 ENTRYPOINT ["dotnet", "backend.dll"]
