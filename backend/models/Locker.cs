@@ -13,5 +13,6 @@ namespace backend.models
         public int paid { get; set; }
         public int due { get; set; }
         public DateTime createdAt { get; set; } = DateTime.UtcNow;
+        public string? notes { get; set; }
     }
 }

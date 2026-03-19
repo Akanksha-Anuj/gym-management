@@ -210,11 +210,39 @@ export default function Locker() {
 
   const handleRowClick = (locker) => {
     setSelectedLocker(locker)
-    setNotes('')
+    setNotes(locker.notes || '')
   }
 
   const handleCloseSidePanel = () => {
     setSelectedLocker(null)
+  }
+
+  const handleSaveNotes = async () => {
+    if (!selectedLocker) return
+
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${config.API_BASE_URL}/api/lockers/${selectedLocker.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...selectedLocker,
+          notes: notes
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save notes')
+      }
+
+      alert('Notes saved successfully!')
+      fetchLockers()
+    } catch (err) {
+      alert('Error: ' + err.message)
+    }
   }
 
   const getInitials = (name) => {
@@ -729,7 +757,18 @@ export default function Locker() {
                 />
               </div>
 
-              <div className="border-t pt-6 flex gap-3">
+              <div className="border-t pt-6 space-y-3">
+                <button
+                  onClick={handleSaveNotes}
+                  className="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition font-medium flex items-center justify-center space-x-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Save Notes</span>
+                </button>
+                
+                <div className="flex gap-3">
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
@@ -746,6 +785,7 @@ export default function Locker() {
                 >
                   Close
                 </button>
+                </div>
               </div>
             </div>
           </div>
