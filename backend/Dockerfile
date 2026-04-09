@@ -17,6 +17,10 @@ WORKDIR /app
 # Copy the build output
 COPY --from=build-env /app/out .
 
+# Disable file watching to prevent inotify issues
+ENV DOTNET_USE_POLLING_FILE_WATCHER=false
+ENV DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE=false
+
 # Expose the port (Render will use $PORT env var)
 EXPOSE 8080
 

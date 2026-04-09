@@ -6,6 +6,12 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Disable configuration file watching to avoid inotify issues on Linux
+builder.Configuration.Sources
+    .OfType<Microsoft.Extensions.Configuration.Json.JsonConfigurationSource>()
+    .ToList()
+    .ForEach(s => s.ReloadOnChange = false);
+
 // Add services to the container.
 builder.Services.AddControllers();
 
